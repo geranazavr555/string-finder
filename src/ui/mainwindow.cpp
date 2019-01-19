@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     index_thread(new QThread(this)),
     search_thread(new QThread(this)),
     index_worker(new IndexWorker()),
-    searcher(),
+    searchers(),
     timer(),
     stage("Ready")
 {
@@ -171,19 +171,29 @@ void MainWindow::search_init()
     }
 
     qDebug() << "search init: " << pattern;
-    if (searcher)
+    if (!searchers.empty())
+    {
         emit stop_search();
-    searcher = index_worker->get_searcher(pattern);
+        disconnect(this, &MainWindow::start_search, searchers.back().get(), &SearchEngine::start);
+        disconnect(this, &MainWindow::stop_search, searchers.back().get(), &SearchEngine::stop);
+        disconnect(searchers.back().get(), &SearchEngine::started, this, &MainWindow::searching_started);
+        disconnect(searchers.back().get(), &SearchEngine::finished, this, &MainWindow::searching_finished);
+        disconnect(searchers.back().get(), &SearchEngine::files_count, this, &MainWindow::set_steps_count);
+        disconnect(searchers.back().get(), &SearchEngine::files_processed, this, &MainWindow::set_current_step);
+        disconnect(searchers.back().get(), &SearchEngine::found, this, &MainWindow::add_result);
+    }
 
-    connect(this, &MainWindow::start_search, searcher.get(), &SearchEngine::start);
-    connect(this, &MainWindow::stop_search, searcher.get(), &SearchEngine::stop, Qt::DirectConnection);
-    connect(searcher.get(), &SearchEngine::started, this, &MainWindow::searching_started);
-    connect(searcher.get(), &SearchEngine::finished, this, &MainWindow::searching_finished);
-    connect(searcher.get(), &SearchEngine::files_count, this, &MainWindow::set_steps_count);
-    connect(searcher.get(), &SearchEngine::files_processed, this, &MainWindow::set_current_step);
-    connect(searcher.get(), &SearchEngine::found, this, &MainWindow::add_result);
+    searchers.push_back(index_worker->get_searcher(pattern));
 
-    searcher->moveToThread(search_thread);
+    connect(this, &MainWindow::start_search, searchers.back().get(), &SearchEngine::start);
+    connect(this, &MainWindow::stop_search, searchers.back().get(), &SearchEngine::stop, Qt::DirectConnection);
+    connect(searchers.back().get(), &SearchEngine::started, this, &MainWindow::searching_started);
+    connect(searchers.back().get(), &SearchEngine::finished, this, &MainWindow::searching_finished);
+    connect(searchers.back().get(), &SearchEngine::files_count, this, &MainWindow::set_steps_count);
+    connect(searchers.back().get(), &SearchEngine::files_processed, this, &MainWindow::set_current_step);
+    connect(searchers.back().get(), &SearchEngine::found, this, &MainWindow::add_result);
+
+    searchers.back()->moveToThread(search_thread);
     emit start_search();
 }
 

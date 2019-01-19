@@ -56,7 +56,7 @@ private:
     std::unique_ptr<Ui::MainWindow> ui;
     QThread* index_thread, *search_thread;
     IndexWorker* index_worker;
-    std::unique_ptr<SearchEngine> searcher;
+    std::vector<std::unique_ptr<SearchEngine> > searchers;
     QTime timer;
     QString stage;
 };
