@@ -1,0 +1,11 @@
+build-*/
+cmake-*/
+qmake-*/
+*.user
+env/
+.idea
+*.data
+*.includes
+*.files
+*.creator
+*.config

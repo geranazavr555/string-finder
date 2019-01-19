@@ -19,6 +19,9 @@ void IndexEngine::build_index()
     size_t counter = 0;
     while (it.hasNext())
     {
+        if (stop_required)
+            break;
+
         QString path = it.next();
         qDebug() << path;
         if (QFileInfo(path).isFile())
@@ -73,7 +76,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
     while (true)
     {
         //qDebug() << "pack";
-        if (read_bytes == 0)
+        if ((!reindex && stop_required) || read_bytes == 0)
             break;
         if (read_bytes == -1)
         {
@@ -83,11 +86,17 @@ void IndexEngine::index_file(QFile file, bool reindex)
             throw FilesystemException(file_path.toStdString());
         }
         if (first_read && read_bytes < 3)
+        {
             file_trigrams[file_path] = {};
+            iter = file_trigrams.find(file_path);
+            break;
+        }
 
         for (size_t i = 0; i < std::min(BUFFER_SIZE, static_cast<size_t>(read_bytes)) - 2; ++i)
         {
             //qDebug() << i;
+            if (!reindex && stop_required)
+                break;
             file_trigrams[file_path].insert(get_trigram(i));
         }
 
@@ -96,13 +105,16 @@ void IndexEngine::index_file(QFile file, bool reindex)
         if (!text_checker.check(iter))
             break;
 
+        if (!reindex && stop_required)
+            break;
+
         memmove(buffer, buffer + BUFFER_SIZE - 2, 2);
         read_bytes = file.read(buffer + 2, BUFFER_SIZE - 2);
         first_read = false;
     }
     mutex.unlock();
 
-    if (!text_checker.check(file_trigrams.find(file_path)))
+    if (iter == file_trigrams.end() || !text_checker.check(iter))
         delete_file(file_path);
 
     delete[] buffer;
@@ -133,3 +145,8 @@ void IndexEngine::update_directory(QString const &path)
     }
 }
 
+void IndexEngine::stop()
+{
+    qDebug() << "Stop flag set";
+    stop_required = true;
+}

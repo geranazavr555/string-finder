@@ -31,10 +31,14 @@ public:
 private:
     void index_file(QFile file, bool reindex = false);
 
+public slots:
+    void stop();
+
 signals:
     void files_processed(size_t);
 
 private:
+    bool stop_required;
     std::mutex mutex;
     QString directory;
     std::unordered_map<QString, std::set<Trigram> > file_trigrams;

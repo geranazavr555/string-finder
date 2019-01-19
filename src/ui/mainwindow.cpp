@@ -67,6 +67,7 @@ void MainWindow::make_connections()
     connect(index_worker, &IndexWorker::files_processed, this, &MainWindow::set_current_step);
     connect(index_worker, &IndexWorker::started, this, &MainWindow::indexing_started);
     connect(index_worker, &IndexWorker::finished, this, &MainWindow::indexing_finished);
+    connect(this, &MainWindow::stop_indexing, index_worker, &IndexWorker::stop, Qt::DirectConnection);
 }
 
 
@@ -105,6 +106,7 @@ void MainWindow::set_steps_count(size_t count)
 void MainWindow::indexing_started()
 {
     timer.restart();
+    ui->treeWidget->clear();
     ui->statusBar->showMessage("Indexing...");
     show_progress_bar();
     set_stage("Indexing");
@@ -143,6 +145,7 @@ void MainWindow::show_progress_bar()
 void MainWindow::searching_started()
 {
     timer.restart();
+    ui->treeWidget->clear();
     ui->statusBar->showMessage("Searching...");
     show_progress_bar();
     set_stage("Searching");
@@ -157,7 +160,16 @@ void MainWindow::searching_finished()
 
 void MainWindow::search_init()
 {
+    if (!index_worker->has_index() || index_worker->is_indexing())
+        return;
+
     QString pattern = ui->lineEdit->text();
+    if (pattern.isEmpty())
+    {
+        ui->treeWidget->clear();
+        return;
+    }
+
     qDebug() << "search init: " << pattern;
     if (searcher)
         emit stop_search();
@@ -186,5 +198,9 @@ void MainWindow::add_result(const QString &file, const QString& slice)
 
 void MainWindow::stop_clicked()
 {
-    emit stop_search();
+    qDebug() << "stop clicked";
+    if (index_worker->is_indexing())
+        emit stop_indexing();
+    else
+        emit stop_search();
 }

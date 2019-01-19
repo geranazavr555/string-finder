@@ -5,6 +5,7 @@
 #include "search.h"
 #include "index.h"
 #include <QFileInfo>
+#include <QThread>
 
 SearchEngine::SearchEngine(QString const &pattern, IndexEngine *index) :
     index(index),
@@ -42,6 +43,8 @@ std::set<Trigram> SearchEngine::get_trigrams(QString const &str)
 {
     std::set<Trigram> result;
     QByteArray const utf8data = str.toUtf8();
+    if (utf8data.size() < 3)
+        return {};
 
     auto get_trigram = [&utf8data](size_t index){
         return (static_cast<uint32_t>(utf8data[static_cast<int>(index)]) << (2 * sizeof(char))) |
@@ -94,7 +97,7 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
                 if (j == pattern.size())
                 {
                     delete[] buffer;
-                    return result;
+                    return (result + 1) - pattern.size();
                 }
             }
             else
@@ -131,7 +134,10 @@ void SearchEngine::start()
 
         auto first_index = first_occurrence(file);
         if (first_index)
-            emit found(QFileInfo(file).absoluteFilePath(), QString::number(first_index.value()));
+        {
+            auto path = QFileInfo(file).absoluteFilePath();
+            emit found(path, slice(path, first_index.value()));
+        }
         emit files_processed(++counter);
     }
 
@@ -141,4 +147,17 @@ void SearchEngine::start()
 void SearchEngine::stop()
 {
     stop_required = true;
+}
+
+QString SearchEngine::slice(QFile file, size_t index, size_t pre_size, size_t post_size)
+{
+    if (!QFileInfo(file).isFile() || !file.open(QIODevice::ReadOnly))
+        return "<Unable to open file>";
+    auto begin = static_cast<qint64>(index >= pre_size ? index - pre_size : 0);
+    auto end = static_cast<qint64>(
+            index + pattern.size() + post_size < file.size() ? index + pattern.size() + post_size : file.size());
+    qint64 length = end - begin;
+    if (length < 0 || !file.seek(begin))
+        return "<Unable to get slice of file>";
+    return QString::fromUtf8(file.read(length));
 }

@@ -4,6 +4,7 @@
 
 #include "worker.h"
 #include <QDirIterator>
+#include <QDebug>
 
 IndexWorker::IndexWorker(QObject *parent) : QObject(parent)
 {
@@ -15,7 +16,9 @@ void IndexWorker::set_directory(QString const &path)
 {
     index = std::make_unique<IndexEngine>(path);
     connect(index.get(), &IndexEngine::files_processed, this, &IndexWorker::files_processed_slot);
+    connect(this, &IndexWorker::stop_signal, index.get(), &IndexEngine::stop, Qt::DirectConnection);
 
+    running = true;
     emit started();
 
     reset_watcher();
@@ -23,6 +26,7 @@ void IndexWorker::set_directory(QString const &path)
     index->build_index();
 
     emit finished();
+    running = false;
 }
 
 size_t IndexWorker::recursive_subscribe(QString const &path)
@@ -81,4 +85,20 @@ void IndexWorker::files_processed_slot(size_t count)
 std::unique_ptr<SearchEngine> IndexWorker::get_searcher(QString const &pattern)
 {
     return index->get_searcher(pattern);
+}
+
+bool IndexWorker::has_index()
+{
+    return index.get();
+}
+
+void IndexWorker::stop()
+{
+    qDebug() << "worker stop";
+    emit stop_signal();
+}
+
+bool IndexWorker::is_indexing()
+{
+    return running;
 }

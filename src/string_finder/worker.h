@@ -13,6 +13,8 @@ class IndexWorker : public QObject
 public:
     IndexWorker(QObject *parent = nullptr);
     std::unique_ptr<SearchEngine> get_searcher(QString const& pattern);
+    bool has_index();
+    bool is_indexing();
 
 private:
     size_t recursive_subscribe(QString const& path);
@@ -20,6 +22,7 @@ private:
 
 public slots:
     void set_directory(QString const& path);
+    void stop();
 
 private slots:
     void directory_changed(QString const& path);
@@ -33,7 +36,10 @@ signals:
     void started();
     void finished();
 
+    void stop_signal();
+
 private:
+    bool running;
     QFileSystemWatcher watcher;
     std::unique_ptr<IndexEngine> index;
 };
