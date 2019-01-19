@@ -40,6 +40,7 @@ signals:
 
 private:
     bool running;
+    bool stop_require;
     QFileSystemWatcher watcher;
     std::unique_ptr<IndexEngine> index;
 };

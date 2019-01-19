@@ -8,6 +8,7 @@
 #include <QThread>
 
 SearchEngine::SearchEngine(QString const &pattern, IndexEngine *index) :
+    stop_required(false),
     index(index),
     pattern(pattern)
 {}
@@ -69,8 +70,10 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
 
     char* buffer = new char[BUFFER_SIZE];
     qint64 read_bytes = file.read(buffer, BUFFER_SIZE);
-    char* pattern_bytes = pattern.toUtf8().data();
+    char* pattern_bytes = new char[pattern.toUtf8().size() + 1];
+    strcpy(pattern_bytes, pattern.toUtf8().data());
     size_t result = 0;
+    size_t j = 0;
 
     while (true)
     {
@@ -79,15 +82,16 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
         if (stop_required || read_bytes == -1)
         {
             delete[] buffer;
+            delete[] pattern_bytes;
             return {};
         }
 
-        size_t j = 0;
-        for (size_t i = 0; i < std::min(static_cast<qint64>(BUFFER_SIZE), read_bytes) - pattern.size() + 1; ++i)
+        for (size_t i = 0; i < std::min(BUFFER_SIZE, static_cast<size_t>(read_bytes)); ++i)
         {
             if (stop_required)
             {
                 delete[] buffer;
+                delete[] pattern_bytes;
                 return {};
             }
 
@@ -97,6 +101,7 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
                 if (j == pattern.size())
                 {
                     delete[] buffer;
+                    delete[] pattern_bytes;
                     return (result + 1) - pattern.size();
                 }
             }
@@ -112,6 +117,7 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
     }
 
     delete[] buffer;
+    delete[] pattern_bytes;
     return {};
 }
 

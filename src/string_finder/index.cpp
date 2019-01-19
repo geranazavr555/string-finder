@@ -3,9 +3,14 @@
 #include <QDirIterator>
 #include <QDebug>
 #include <cmath>
+#include <QThread>
 
 IndexEngine::IndexEngine(QString directory):
-        directory(std::move(directory))
+        stop_required(false),
+        mutex(),
+        directory(std::move(directory)),
+        file_trigrams(),
+        text_checker()
 {}
 
 std::unique_ptr<SearchEngine> IndexEngine::get_searcher(QString const &pattern)
@@ -23,7 +28,7 @@ void IndexEngine::build_index()
             break;
 
         QString path = it.next();
-        qDebug() << path;
+        //qDebug() << path;
         if (QFileInfo(path).isFile())
         {
             try
@@ -76,7 +81,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
     while (true)
     {
         //qDebug() << "pack";
-        if ((!reindex && stop_required) || read_bytes == 0)
+        if ((!reindex && stop_required) || read_bytes == 0 || QThread::currentThread()->isInterruptionRequested())
             break;
         if (read_bytes == -1)
         {
@@ -95,7 +100,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
         for (size_t i = 0; i < std::min(BUFFER_SIZE, static_cast<size_t>(read_bytes)) - 2; ++i)
         {
             //qDebug() << i;
-            if (!reindex && stop_required)
+            if ((!reindex && stop_required) || QThread::currentThread()->isInterruptionRequested())
                 break;
             file_trigrams[file_path].insert(get_trigram(i));
         }
@@ -105,7 +110,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
         if (!text_checker.check(iter))
             break;
 
-        if (!reindex && stop_required)
+        if ((!reindex && stop_required) || QThread::currentThread()->isInterruptionRequested())
             break;
 
         memmove(buffer, buffer + BUFFER_SIZE - 2, 2);
@@ -140,6 +145,8 @@ void IndexEngine::update_directory(QString const &path)
     {
         for (auto const& file_path : dir.entryList(QDir::Files | QDir::Readable))
         {
+            if (QThread::currentThread()->isInterruptionRequested())
+                break;
             update_file(file_path);
         }
     }

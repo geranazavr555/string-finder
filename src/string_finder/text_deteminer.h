@@ -13,10 +13,10 @@ public:
     TextFileDeterminer();
     TextFileDeterminer(size_t trigram_limit);
 
-    bool check(std::unordered_map<QString, std::set<Trigram> >::const_iterator index_iter);
+    bool check(std::unordered_map<QString, Trigrams>::const_iterator index_iter);
 
 private:
-    size_t count_trigrams(std::unordered_map<QString, std::set<Trigram> >::const_iterator const& index_iter);
+    size_t count_trigrams(std::unordered_map<QString, Trigrams>::const_iterator const& index_iter);
 
 private:
     size_t trigram_limit;

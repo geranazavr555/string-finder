@@ -32,6 +32,7 @@ MainWindow::~MainWindow()
     emit stop_indexing();
     search_thread->quit();
     search_thread->wait();
+    index_thread->requestInterruption();
     index_thread->quit();
     index_thread->wait();
     delete index_worker;

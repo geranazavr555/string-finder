@@ -7,7 +7,7 @@
 #include <QString>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
-#include <set>
+#include <unordered_set>
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -41,7 +41,7 @@ private:
     bool stop_required;
     std::mutex mutex;
     QString directory;
-    std::unordered_map<QString, std::set<Trigram> > file_trigrams;
+    std::unordered_map<QString, Trigrams> file_trigrams;
     TextFileDeterminer text_checker;
 };
 
