@@ -71,8 +71,9 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
     char* buffer = new char[BUFFER_SIZE + 1];
     qint64 read_bytes = file.read(buffer, BUFFER_SIZE);
     buffer[read_bytes] = '\0';
-    char* pattern_bytes = new char[pattern.toUtf8().size() + 1];
-    strcpy(pattern_bytes, pattern.toUtf8().data());
+    auto utf8 = pattern.toUtf8();
+    char* pattern_bytes = new char[utf8.size() + 1];
+    strcpy(pattern_bytes, utf8.data());
     size_t result = 0;
 
     while (true)
@@ -96,9 +97,9 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
         }
         result += read_bytes;
 
-        memmove(buffer, buffer + BUFFER_SIZE - pattern.size() + 1, static_cast<size_t>(pattern.size() - 1));
-        read_bytes = file.read(buffer + pattern.size() - 1, static_cast<qint64>(BUFFER_SIZE - pattern.size() + 1));
-        buffer[read_bytes + pattern.size()] = '\0';
+        memmove(buffer, buffer + BUFFER_SIZE - utf8.size() + 1, static_cast<size_t>(utf8.size() - 1));
+        read_bytes = file.read(buffer + utf8.size() - 1, static_cast<qint64>(BUFFER_SIZE - utf8.size() + 1));
+        buffer[read_bytes + utf8.size()] = '\0';
     }
 
     delete[] buffer;
