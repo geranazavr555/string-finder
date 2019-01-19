@@ -76,9 +76,15 @@ void IndexEngine::index_file(QFile file, bool reindex)
     if (reindex)
         delete_file(file_path);
     qint64 read_bytes = file.read(buffer, BUFFER_SIZE);
-    auto iter = file_trigrams.end();
     bool first_read = true;
     mutex.lock();
+    auto iter = file_trigrams.find(file_path);
+    if (iter == file_trigrams.end())
+    {
+        file_trigrams[file_path] = {};
+        iter = file_trigrams.find(file_path);
+    }
+
     while (true)
     {
         //qDebug() << "pack";
@@ -93,8 +99,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
         }
         if (first_read && read_bytes < 3)
         {
-            file_trigrams[file_path] = {};
-            iter = file_trigrams.find(file_path);
+            iter->second = {};
             break;
         }
 
@@ -103,11 +108,9 @@ void IndexEngine::index_file(QFile file, bool reindex)
             //qDebug() << i;
             if (stop_required)
                 break;
-            file_trigrams[file_path].insert(get_trigram(i));
+            iter->second.insert(get_trigram(i));
         }
 
-        if (iter == file_trigrams.end())
-            iter = file_trigrams.find(file_path);
         if (!text_checker.check(iter))
             break;
 
