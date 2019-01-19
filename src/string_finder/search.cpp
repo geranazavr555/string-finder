@@ -68,12 +68,12 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
     if (!QFileInfo(file).isFile() || !file.open(QIODevice::ReadOnly))
         return {};
 
-    char* buffer = new char[BUFFER_SIZE];
+    char* buffer = new char[BUFFER_SIZE + 1];
     qint64 read_bytes = file.read(buffer, BUFFER_SIZE);
+    buffer[read_bytes] = '\0';
     char* pattern_bytes = new char[pattern.toUtf8().size() + 1];
     strcpy(pattern_bytes, pattern.toUtf8().data());
     size_t result = 0;
-    size_t j = 0;
 
     while (true)
     {
@@ -86,34 +86,19 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
             return {};
         }
 
-        for (size_t i = 0; i < std::min(BUFFER_SIZE, static_cast<size_t>(read_bytes)); ++i)
+        auto ptr = strstr(buffer, pattern_bytes);
+        if (ptr)
         {
-            if (stop_required)
-            {
-                delete[] buffer;
-                delete[] pattern_bytes;
-                return {};
-            }
-
-            if (pattern_bytes[j] == buffer[i])
-            {
-                ++j;
-                if (j == pattern.size())
-                {
-                    delete[] buffer;
-                    delete[] pattern_bytes;
-                    return (result + 1) - pattern.size();
-                }
-            }
-            else
-            {
-                j = 0;
-            }
-            ++result;
+            size_t diff = ptr - buffer;
+            delete[] buffer;
+            delete[] pattern_bytes;
+            return result + diff;
         }
+        result += read_bytes;
 
         memmove(buffer, buffer + BUFFER_SIZE - pattern.size() + 1, static_cast<size_t>(pattern.size() - 1));
         read_bytes = file.read(buffer + pattern.size() - 1, static_cast<qint64>(BUFFER_SIZE - pattern.size() + 1));
+        buffer[read_bytes + pattern.size()] = '\0';
     }
 
     delete[] buffer;
