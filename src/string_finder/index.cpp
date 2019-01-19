@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <cmath>
 #include <QThread>
+#include <QDebug>
 
 IndexEngine::IndexEngine(QString directory):
         stop_required(false),
@@ -127,7 +128,16 @@ void IndexEngine::index_file(QFile file, bool reindex)
 
 void IndexEngine::update_file(QString const &path)
 {
-    index_file(path, true);
+    try
+    {
+        index_file(path, true);
+    }
+    catch (std::exception const& err)
+    {
+        file_trigrams[path].clear();
+        file_trigrams.erase(path);
+        qWarning() << err.what();
+    }
 }
 
 void IndexEngine::delete_file(QString const &path)
