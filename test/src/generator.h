@@ -1,23 +1,13 @@
 #ifndef DUPLICATE_SCANNER_TESTS_GENERATOR_H
 #define DUPLICATE_SCANNER_TESTS_GENERATOR_H
 
+#include "string_finder/general_declarations.h"
 #include <QString>
 #include <QDir>
 #include <unordered_map>
 #include <functional>
 #include <iostream>
 #include <vector>
-
-namespace std
-{
-    template <> struct hash<QString>
-    {
-        size_t operator()(const QString & x) const
-        {
-            return qHash(x);
-        }
-    };
-}
 
 class FilesGenerator
 {
@@ -33,6 +23,7 @@ private:
     std::unordered_map<QString, std::function<QByteArray()> > generators;
     std::unordered_map<QString, QString> copyof;
     std::unordered_map<QString, std::vector<QString> > copies;
+    std::unordered_map<QString, Trigrams> file_trigrams;
 
 private:
     QString rel_path(QString const& alias)
@@ -57,6 +48,11 @@ public:
     {
         if (!aliases.empty())
             clean_up();
+    }
+
+    QString get_root()
+    {
+        return QDir(working_dir + "/tests_gen").absolutePath();
     }
 
     QString path(QString const &alias)
@@ -157,6 +153,37 @@ public:
 
             ++files_cnt;
         }
+
+        for (auto const& alias_path_pair : aliases)
+        {
+            QString path = rel_path(alias_path_pair.first);
+            QFileInfo file_info(path);
+            QFile file(file_info.filePath());
+            if (!file.open(QIODevice::ReadOnly))
+                throw std::runtime_error(ERROR_MSG);
+
+            QByteArray bytes = file.readAll();
+            char * raw_bytes = bytes.data();
+            if (bytes.size() < 3)
+            {
+                file_trigrams[this->path(alias_path_pair.first)] = {};
+                continue;
+            }
+            auto get_trigram = [&raw_bytes](size_t index){
+                return (static_cast<uint32_t>(raw_bytes[index]) << (2 * sizeof(char))) |
+                       (static_cast<uint32_t>(raw_bytes[index + 1]) << (sizeof(char))) |
+                       (static_cast<uint32_t>(raw_bytes[index + 2]));
+            };
+
+            for (size_t i = 0; i < bytes.size() - 2; ++i)
+                file_trigrams[this->path(alias_path_pair.first)].insert(get_trigram(i));
+        }
+        std::cerr << "files generated\n";
+    }
+
+    std::unordered_map<QString, Trigrams>::const_iterator get_map_iterator(QString alias)
+    {
+        return file_trigrams.find(path(alias));
     }
 
     void clean_up()

@@ -2,10 +2,11 @@
 #include <gtest/gtest.h>
 #include "generator.h"
 #include <functional>
-
-FilesGenerator* fg = nullptr;
+#include <QString>
 
 using FG = FilesGenerator;
+
+FG* fg = nullptr;
 
 class Environment : public ::testing::Environment
 {
@@ -38,15 +39,15 @@ public:
         fg->copy("small256ac", "small256a", "x/y/s256a");
         fg->copy("small256bc", "small256b", "x/y/s256b");
 
-        fg->declare("1Ma", std::bind(repeat, 'a', 1024 * 1024));
-        fg->declare("1Mb", std::bind(repeat, 'b', 1024 * 1024));
-        fg->copy("1Mac", "1Ma", "x/z/1mac");
-        fg->copy("1Mbc", "1Mb", "x/z/1mbc");
+        //fg->declare("1Ma", std::bind(repeat, 'a', 1024 * 1024));
+        //fg->declare("1Mb", std::bind(repeat, 'b', 1024 * 1024));
+        //fg->copy("1Mac", "1Ma", "x/z/1mac");
+        //fg->copy("1Mbc", "1Mb", "x/z/1mbc");
 
-        fg->declare("biga", std::bind(repeat, 'a', 1024 * 1024 * 15));
-        fg->declare("bigb", std::bind(repeat, 'b', 1024 * 1024 * 15));
-        fg->copy("bigac", "biga", "bigs/bigac");
-        fg->copy("bigbc", "bigb", "bigs/bigbc");
+        //fg->declare("biga", std::bind(repeat, 'a', 1024 * 1024 * 15));
+        //fg->declare("bigb", std::bind(repeat, 'b', 1024 * 1024 * 15));
+        //fg->copy("bigac", "biga", "bigs/bigac");
+        //fg->copy("bigbc", "bigb", "bigs/bigbc");
 
         fg->declare("trash1", FG::wrap("qerqerreqerrewqqerqwerqer"));
         fg->declare("trash2", FG::wrap("sfg1569196sf1dg61sdf5g1654sf5g451"), "x/trash");

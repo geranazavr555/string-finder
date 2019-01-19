@@ -147,7 +147,7 @@ void IndexEngine::update_directory(QString const &path)
         {
             if (QThread::currentThread()->isInterruptionRequested())
                 break;
-            update_file(file_path);
+            update_file(QFileInfo(dir, file_path).absoluteFilePath());
         }
     }
 }
