@@ -11,6 +11,7 @@ IndexWorker::IndexWorker(QObject *parent) :
     QObject(parent),
     running(false),
     stop_require(false),
+    full_stop_require(false),
     watcher(),
     index()
 {
@@ -121,4 +122,10 @@ void IndexWorker::stop()
 bool IndexWorker::is_indexing() const
 {
     return running;
+}
+
+void IndexWorker::full_stop()
+{
+    stop();
+    full_stop_require = true;
 }

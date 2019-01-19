@@ -29,9 +29,9 @@ MainWindow::~MainWindow()
 {
     emit stop_search();
     emit stop_indexing();
+    emit stop_worker();
     search_thread->quit();
     search_thread->wait();
-    index_thread->requestInterruption();
     index_thread->quit();
     index_thread->wait();
     delete index_worker;
@@ -68,6 +68,7 @@ void MainWindow::make_connections()
     connect(index_worker, &IndexWorker::started, this, &MainWindow::indexing_started);
     connect(index_worker, &IndexWorker::finished, this, &MainWindow::indexing_finished);
     connect(this, &MainWindow::stop_indexing, index_worker, &IndexWorker::stop, Qt::DirectConnection);
+    connect(this, &MainWindow::stop_worker, index_worker, &IndexWorker::full_stop, Qt::DirectConnection);
 }
 
 

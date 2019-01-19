@@ -52,6 +52,7 @@ signals:
     void start_search();
     void stop_search();
     void stop_indexing();
+    void stop_worker();
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;

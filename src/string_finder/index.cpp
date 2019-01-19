@@ -82,7 +82,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
     while (true)
     {
         //qDebug() << "pack";
-        if ((!reindex && stop_required) || read_bytes == 0 || QThread::currentThread()->isInterruptionRequested())
+        if (stop_required || read_bytes == 0)
             break;
         if (read_bytes == -1)
         {
@@ -101,7 +101,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
         for (size_t i = 0; i < std::min(BUFFER_SIZE, static_cast<size_t>(read_bytes)) - 2; ++i)
         {
             //qDebug() << i;
-            if ((!reindex && stop_required) || QThread::currentThread()->isInterruptionRequested())
+            if (stop_required)
                 break;
             file_trigrams[file_path].insert(get_trigram(i));
         }
@@ -111,7 +111,7 @@ void IndexEngine::index_file(QFile file, bool reindex)
         if (!text_checker.check(iter))
             break;
 
-        if ((!reindex && stop_required) || QThread::currentThread()->isInterruptionRequested())
+        if (stop_required)
             break;
 
         memmove(buffer, buffer + BUFFER_SIZE - 2, 2);
@@ -154,7 +154,7 @@ void IndexEngine::update_directory(QString const &path)
     {
         for (auto const& file_path : dir.entryList(QDir::Files | QDir::Readable))
         {
-            if (QThread::currentThread()->isInterruptionRequested())
+            if (stop_required)
                 break;
             update_file(QFileInfo(dir, file_path).absoluteFilePath());
         }

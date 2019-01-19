@@ -23,6 +23,7 @@ private:
 public slots:
     void set_directory(QString const& path);
     void stop();
+    void full_stop();
 
 private slots:
     void directory_changed(QString const& path);
@@ -41,6 +42,7 @@ signals:
 private:
     bool running;
     bool stop_require;
+    bool full_stop_require;
     QFileSystemWatcher watcher;
     std::unique_ptr<IndexEngine> index;
 };
