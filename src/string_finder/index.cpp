@@ -143,7 +143,6 @@ void IndexEngine::update_file(QString const &path)
 void IndexEngine::delete_file(QString const &path)
 {
     mutex.lock();
-    file_trigrams[path].clear();
     file_trigrams.erase(path);
     mutex.unlock();
 }
