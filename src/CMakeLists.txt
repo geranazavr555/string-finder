@@ -19,6 +19,6 @@ add_executable(string-finder
         ui/mainwindow.h
         ui/mainwindow.ui
         string_finder/exceptions.h
-        ui/FileItem.h string_finder/text_deteminer.cpp string_finder/text_deteminer.h string_finder/general_declarations.cpp string_finder/general_declarations.h string_finder/index.cpp string_finder/index.h string_finder/search.cpp string_finder/search.h string_finder/worker.cpp string_finder/worker.h)
+        string_finder/text_deteminer.cpp string_finder/text_deteminer.h string_finder/general_declarations.cpp string_finder/general_declarations.h string_finder/index.cpp string_finder/index.h string_finder/search.cpp string_finder/search.h string_finder/worker.cpp string_finder/worker.h)
 qt5_use_modules(string-finder Widgets)
 target_link_libraries(string-finder -lpthread)

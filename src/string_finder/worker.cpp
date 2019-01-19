@@ -106,7 +106,7 @@ std::unique_ptr<SearchEngine> IndexWorker::get_searcher(QString const &pattern)
     return index->get_searcher(pattern);
 }
 
-bool IndexWorker::has_index()
+bool IndexWorker::has_index() const
 {
     return index.get();
 }
@@ -118,7 +118,7 @@ void IndexWorker::stop()
     emit stop_signal();
 }
 
-bool IndexWorker::is_indexing()
+bool IndexWorker::is_indexing() const
 {
     return running;
 }

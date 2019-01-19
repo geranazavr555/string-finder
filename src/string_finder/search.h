@@ -16,11 +16,11 @@ class SearchEngine : public QObject
 public:
     SearchEngine(QString const &pattern, IndexEngine* index);
 
+private:
     std::list<QFile> potential_files();
     static std::set<Trigram> get_trigrams(QString const& str);
-
-    std::optional<size_t> first_occurrence(QFile& file);
-    QString slice(QFile file, size_t index, size_t pre_size = 10, size_t post_size = 10);
+    std::optional<size_t> first_occurrence(QFile& file) const;
+    QString slice(QFile file, size_t index, size_t pre_size = 10, size_t post_size = 10) const;
 
 public slots:
     void start();

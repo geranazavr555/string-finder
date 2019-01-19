@@ -13,8 +13,8 @@ class IndexWorker : public QObject
 public:
     IndexWorker(QObject *parent = nullptr);
     std::unique_ptr<SearchEngine> get_searcher(QString const& pattern);
-    bool has_index();
-    bool is_indexing();
+    bool has_index() const;
+    bool is_indexing() const;
 
 private:
     size_t recursive_subscribe(QString const& path);

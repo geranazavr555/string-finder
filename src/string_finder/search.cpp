@@ -61,7 +61,7 @@ std::set<Trigram> SearchEngine::get_trigrams(QString const &str)
     return result;
 }
 
-std::optional<size_t> SearchEngine::first_occurrence(QFile& file)
+std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
 {
     constexpr size_t BUFFER_SIZE = 1024 * 1024 * 4;
     // TODO: REWRITE THIS
@@ -155,7 +155,7 @@ void SearchEngine::stop()
     stop_required = true;
 }
 
-QString SearchEngine::slice(QFile file, size_t index, size_t pre_size, size_t post_size)
+QString SearchEngine::slice(QFile file, size_t index, size_t pre_size, size_t post_size) const
 {
     if (!QFileInfo(file).isFile() || !file.open(QIODevice::ReadOnly))
         return "<Unable to open file>";
