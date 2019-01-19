@@ -14,8 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     index_worker(new IndexWorker()),
     searchers(),
     timer(),
-    stage("Ready"),
-    searching_flag(false)
+    stage("Ready")
 {
     qRegisterMetaType<size_t>("size_t");
 
@@ -154,6 +153,7 @@ void MainWindow::searching_started()
 
 void MainWindow::searching_finished()
 {
+    ui->searchButton->setEnabled(true);
     ui->statusBar->showMessage("Searching finished in " + QString::number(timer.elapsed()) + " ms");
     ui->progressBar->hide();
     set_stage("Ready");
@@ -171,13 +171,11 @@ void MainWindow::search_init()
         return;
     }
 
+    ui->searchButton->setEnabled(false);
+
     qDebug() << "search init: " << pattern;
     if (!searchers.empty())
     {
-        emit stop_search();
-        while (searching_flag)
-            QThread::currentThread()->msleep(30);
-
         disconnect(this, &MainWindow::start_search, searchers.back().get(), &SearchEngine::start);
         disconnect(this, &MainWindow::stop_search, searchers.back().get(), &SearchEngine::stop);
         disconnect(searchers.back().get(), &SearchEngine::started, this, &MainWindow::searching_started);
@@ -195,14 +193,11 @@ void MainWindow::search_init()
     connect(this, &MainWindow::stop_search, searchers.back().get(), &SearchEngine::stop, Qt::DirectConnection);
     connect(searchers.back().get(), &SearchEngine::started, this, &MainWindow::searching_started);
     connect(searchers.back().get(), &SearchEngine::finished, this, &MainWindow::searching_finished);
-    connect(searchers.back().get(), &SearchEngine::finished, this, &MainWindow::searching_finished_notify,
-            Qt::DirectConnection);
     connect(searchers.back().get(), &SearchEngine::files_count, this, &MainWindow::set_steps_count);
     connect(searchers.back().get(), &SearchEngine::files_processed, this, &MainWindow::set_current_step);
     connect(searchers.back().get(), &SearchEngine::found, this, &MainWindow::add_result);
 
     searchers.back()->moveToThread(search_thread);
-    searching_flag = true;
     emit start_search();
 }
 
@@ -222,9 +217,4 @@ void MainWindow::stop_clicked()
         emit stop_indexing();
     else
         emit stop_search();
-}
-
-void MainWindow::searching_finished_notify()
-{
-    searching_flag = false;
 }

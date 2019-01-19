@@ -41,7 +41,6 @@ public slots:
 
     void searching_started();
     void searching_finished();
-    void searching_finished_notify();
 
     void set_steps_count(size_t);
     void set_current_step(size_t);
@@ -61,7 +60,6 @@ private:
     std::vector<std::unique_ptr<SearchEngine> > searchers;
     QTime timer;
     QString stage;
-    bool searching_flag;
 };
 
 #endif // MAINWINDOW_H

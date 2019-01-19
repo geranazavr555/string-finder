@@ -9,6 +9,7 @@
 
 SearchEngine::SearchEngine(QString const &pattern, IndexEngine *index) :
     stop_required(false),
+    running(false),
     index(index),
     pattern(pattern)
 {}
@@ -109,6 +110,7 @@ std::optional<size_t> SearchEngine::first_occurrence(QFile& file) const
 
 void SearchEngine::start()
 {
+    running = true;
     emit started();
     auto files = potential_files();
     if (stop_required)
@@ -134,6 +136,7 @@ void SearchEngine::start()
     }
 
     emit finished();
+    running = false;
 }
 
 void SearchEngine::stop()

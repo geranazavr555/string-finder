@@ -15,6 +15,7 @@ class SearchEngine : public QObject
 
 public:
     SearchEngine(QString const &pattern, IndexEngine* index);
+    bool is_running() const;
 
 private:
     std::list<QFile> potential_files();
@@ -35,6 +36,7 @@ signals:
 
 private:
     bool stop_required;
+    bool running;
     IndexEngine* index;
     QString pattern;
 };
