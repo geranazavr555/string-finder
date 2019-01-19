@@ -147,7 +147,8 @@ QString SearchEngine::slice(QFile file, size_t index, size_t pre_size, size_t po
         return "<Unable to open file>";
     auto begin = static_cast<qint64>(index >= pre_size ? index - pre_size : 0);
     auto end = static_cast<qint64>(
-            index + pattern.size() + post_size < file.size() ? index + pattern.size() + post_size : file.size());
+            index + pattern.toUtf8().size() + post_size < file.size() ? index + pattern.toUtf8().size() +
+            post_size : file.size());
     qint64 length = end - begin;
     if (length < 0 || !file.seek(begin))
         return "<Unable to get slice of file>";
